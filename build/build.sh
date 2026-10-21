@@ -4,6 +4,7 @@
 # oficial de php.net. Si se pasa patch-file, lo aplica con `patch -p1`.
 # Deja el binario en build/out/php-<version>[-patched].
 set -euo pipefail
+docker info >/dev/null 2>&1 || { echo "ERROR: docker daemon no corre. Levantalo con: sudo systemctl start docker"; exit 4; }
 VER="${1:?version, ej 7.4.33}"; IMG="${2:?imagen, ej debian:bullseye}"; PATCH="${3:-}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/build/out"; mkdir -p "$OUT"
