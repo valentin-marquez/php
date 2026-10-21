@@ -1,0 +1,4 @@
+.upstream/
+*.tar.gz
+*.tar.xz
+build/out/

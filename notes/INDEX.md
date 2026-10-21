@@ -1,0 +1,1 @@
+- [fix-analysis.md](notes/fix-analysis.md) — mecanismo del parche oficial
