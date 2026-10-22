@@ -16,7 +16,7 @@ aplicados pero no cubiertos por el test automático.
 | 7.2.34  | PHP7  | php-7.2.34.patch | OK | PATCHED | conjunto esencial (sin VM-concat/singleton); +ZSTR_MAX_LEN n/a |
 | 7.1.33  | PHP7  | php-7.1.33.patch | OK | PATCHED | esencial; uncond resets tras EG(active)=0 |
 | 7.0.33  | PHP7  | php-7.0.33.patch | OK | PATCHED | esencial; objects_store free de 1 arg |
-| 5.6.40  | PHP5  | pendiente | - | - | re-derivación (motor viejo) |
+| 5.6.40  | PHP5  | php-5.6.40.patch | OK | PATCHED | re-derivación esencial |
 | 5.5.38  | PHP5  | pendiente | - | - | re-derivación |
 | 5.4.45  | PHP5  | pendiente | - | - | re-derivación |
 
@@ -44,3 +44,21 @@ de concatenación en la VM (requieren tocar el archivo generado zend_vm_execute.
 overflow solo alcanzable con strings ~SIZE_MAX) y los arrays singleton
 (optimización de footprint, no vector de la CVE). El test de regresión verifica
 el mecanismo safe_error_ex; el resto es port fiel del upstream.
+
+## Re-derivación 5.x (motor pre-PHP7)
+
+5.6/5.5/5.4 no comparten motor con 7.x, así que se re-derivó el conjunto esencial:
+- `zend_alloc.c`: helper `zend_mm_safe_error_ex` (fprintf + `_exit(1)`), `zend_mm_safe_error`
+  hace `_exit` directo en la ruta overflow==0 (antes de cualquier bailout), las 6
+  rutas de overflow de enteros y la de string allocation pasan a `_exit`, y
+  `zend_mm_panic` usa `_exit`. Cierra el vector de corrupción por bailout (109619).
+- `ext/session/session.c`: `if (!PS(rfc1867_enabled) || 1)` neutraliza el callback
+  de upload_progress (109618).
+- `main/main.c`: `PG(http_globals)[i] = NULL` tras el dtor en request_shutdown.
+- `main/SAPI.c`: NULL tras efree de auth_user/password/digest/content_type_dup/current_user.
+
+Omitido en 5.x (documentado): resets de handlers en `shutdown_executor` (estructura
+del motor 5.x muy distinta; el vector principal de 109618 ya queda cerrado por la
+neutralización del callback y el reset de http_globals), guardas de concat en la VM
+y arrays singleton (hardening secundario). Verificado: baseline VULNERABLE,
+parcheado PATCHED, build limpio en debian:jessie (gcc 4.9).
