@@ -14,8 +14,8 @@ aplicados pero no cubiertos por el test automático.
 | 7.4.33  | PHP7  | oficial | OK | PATCHED | aplica tal cual |
 | 7.3.33  | PHP7  | php-7.3.33.patch | OK | PATCHED | +ZSTR_MAX_LEN/OVERHEAD (no existían); guarda CONCAT-extend agregada; resets en rama fast_shutdown |
 | 7.2.34  | PHP7  | php-7.2.34.patch | OK | PATCHED | conjunto esencial (sin VM-concat/singleton); +ZSTR_MAX_LEN n/a |
-| 7.1.33  | PHP7  | pendiente | - | - | |
-| 7.0.33  | PHP7  | pendiente | - | - | |
+| 7.1.33  | PHP7  | php-7.1.33.patch | OK | PATCHED | esencial; uncond resets tras EG(active)=0 |
+| 7.0.33  | PHP7  | php-7.0.33.patch | OK | PATCHED | esencial; objects_store free de 1 arg |
 | 5.6.40  | PHP5  | pendiente | - | - | re-derivación (motor viejo) |
 | 5.5.38  | PHP5  | pendiente | - | - | re-derivación |
 | 5.4.45  | PHP5  | pendiente | - | - | re-derivación |
