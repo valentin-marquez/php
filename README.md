@@ -44,10 +44,16 @@ parcheado PATCHED.
 
 | Versión | Base | Verificación |
 |---------|------|--------------|
-| 7.4.33 | parche oficial PHP-7.4 (`712e60f9ed`) | PATCHED |
-| 7.3.33 | port completo | PATCHED |
-| 7.2.34 / 7.1.33 / 7.0.33 | conjunto esencial | PATCHED |
+| 7.4.33 | parche oficial PHP-7.4 (`712e60f9ed`, verbatim) | PATCHED |
+| 7.3.33 / 7.2.34 / 7.1.33 / 7.0.33 | port completo | PATCHED |
 | 5.6.40 / 5.5.38 / 5.4.45 | re-derivación esencial (motor PHP5) | PATCHED |
+
+Los 7.x llevan el port completo (7.1 calca el PR comunitario #24500 de ieth0,
+único backport público; 7.0/7.2 a paridad). El build usa `--enable-session`, así
+que `ext/session/session.c` —el vector parcheado— se compila. Una auditoría con
+agente Fable contra el PR comunitario corrigió tres defectos en los backports
+7.0–7.3 (compilación `|| true`→`|| 1`, reubicación de resets de `shutdown_executor`,
+guarda `zend_mm_alloc_huge`); detalle en `notes/backports.md`.
 
 Parches en `patches/php-<ver>.patch`. Tags `backport-<ver>` por versión.
 Detalle de alcance y adaptaciones por versión en `notes/backports.md`.

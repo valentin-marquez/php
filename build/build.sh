@@ -30,7 +30,7 @@ docker run --rm $PATCHMNT -v "$OUT:/out" "$IMG" bash -c '
   curl -fsSL "'"$URL"'" -o php.tar.gz
   tar xzf php.tar.gz && cd "php-'"$VER"'"
   '"$PATCHCP"'
-  ./configure --disable-all --enable-cli --without-pear >/dev/null
+  ./configure --disable-all --enable-cli --enable-hash --enable-session --without-pear >/dev/null
   make -j"$(nproc)" >/dev/null
   if grep -q zend_mm_safe_error_ex Zend/zend_vm_def.h 2>/dev/null; then
     echo ">> regenerando zend_vm_execute.h desde zend_vm_def.h"
