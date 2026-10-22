@@ -30,7 +30,7 @@ docker run --rm $PATCHMNT -v "$OUT:/out" "$IMG" bash -c '
   curl -fsSL "'"$URL"'" -o php.tar.gz
   tar xzf php.tar.gz && cd "php-'"$VER"'"
   '"$PATCHCP"'
-  ./configure --disable-all --enable-cli --enable-hash --enable-session --without-pear >/dev/null
+  ./configure --disable-all --enable-cli --enable-cgi --enable-hash --enable-session --without-pear >/dev/null
   make -j"$(nproc)" >/dev/null
   if grep -q zend_mm_safe_error_ex Zend/zend_vm_def.h 2>/dev/null; then
     echo ">> regenerando zend_vm_execute.h desde zend_vm_def.h"
@@ -38,6 +38,7 @@ docker run --rm $PATCHMNT -v "$OUT:/out" "$IMG" bash -c '
     make -j"$(nproc)" >/dev/null
   fi
   cp sapi/cli/php /out/"'"$TAG"'"
+  [ -x sapi/cgi/php-cgi ] && cp sapi/cgi/php-cgi /out/"'"$TAG"'"-cgi || true
   /out/"'"$TAG"'" -v | head -1
 '
 [ -x "$OUT/$TAG" ] || { echo "BUILD_FAILED: no se generó $OUT/$TAG"; exit 5; }
