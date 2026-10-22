@@ -1,0 +1,133 @@
+diff --git a/Zend/zend_alloc.c b/Zend/zend_alloc.c
+index d23118b..db82780 100644
+--- a/Zend/zend_alloc.c
++++ b/Zend/zend_alloc.c
+@@ -91,7 +91,7 @@ static void zend_mm_panic(const char *message)
+ #if ZEND_DEBUG && defined(HAVE_KILL) && defined(HAVE_GETPID)
+ 	kill(getpid(), SIGSEGV);
+ #endif
+-	exit(1);
++	_exit(1);
+ }
+ 
+ /*******************/
+@@ -1736,6 +1736,12 @@ ZEND_API void zend_mm_shutdown(zend_mm_heap *heap, int full_shutdown, int silent
+ 	}
+ }
+ 
++static void zend_mm_safe_error_ex(const char *message)
++{
++	fprintf(stderr, "\nFatal error: %s\n", message);
++	_exit(1);
++}
++
+ static void zend_mm_safe_error(zend_mm_heap *heap,
+ 	const char *format,
+ 	size_t limit,
+@@ -1766,6 +1772,17 @@ static void zend_mm_safe_error(zend_mm_heap *heap,
+ 		if (!error_filename) {
+ 			error_filename = "Unknown";
+ 		}
++		fprintf(stderr, "\nFatal error: ");
++		fprintf(stderr,
++			format,
++			limit,
++#if ZEND_DEBUG
++			filename,
++			lineno,
++#endif
++			size);
++		fprintf(stderr, " in %s on line %d\n", error_filename, error_lineno);
++		_exit(1);
+ 		heap->overflow = 1;
+ 		zend_try {
+ 			zend_error_noreturn(E_ERROR,
+@@ -2468,7 +2485,7 @@ static inline size_t safe_address(size_t nmemb, size_t size, size_t offset)
+ 	       "rm"(offset));
+ 
+ 	if (UNEXPECTED(overflow)) {
+-		zend_error_noreturn(E_ERROR, "Possible integer overflow in memory allocation (%zu * %zu + %zu)", nmemb, size, offset);
++		zend_mm_safe_error_ex("Possible integer overflow in memory allocation");
+ 		return 0;
+ 	}
+ 	return res;
+@@ -2498,7 +2515,7 @@ static inline size_t safe_address(size_t nmemb, size_t size, size_t offset)
+ #undef LP_SUFF
+ 
+         if (UNEXPECTED(overflow)) {
+-                zend_error_noreturn(E_ERROR, "Possible integer overflow in memory allocation (%zu * %zu + %zu)", nmemb, size, offset);
++                zend_mm_safe_error_ex("Possible integer overflow in memory allocation");
+                 return 0;
+         }
+         return res;
+@@ -2511,7 +2528,7 @@ static inline size_t safe_address(size_t nmemb, size_t size, size_t offset)
+ 	zend_ulong64 res = (zend_ulong64)nmemb * (zend_ulong64)size + (zend_ulong64)offset;
+ 
+ 	if (UNEXPECTED(res > (zend_ulong64)0xFFFFFFFFL)) {
+-		zend_error_noreturn(E_ERROR, "Possible integer overflow in memory allocation (%zu * %zu + %zu)", nmemb, size, offset);
++		zend_mm_safe_error_ex("Possible integer overflow in memory allocation");
+ 		return 0;
+ 	}
+ 	return (size_t) res;
+@@ -2526,7 +2543,7 @@ static inline size_t safe_address(size_t nmemb, size_t size, size_t offset)
+ 	double _delta = (double)res - _d;
+ 
+ 	if (UNEXPECTED((_d + _delta ) != _d)) {
+-		zend_error_noreturn(E_ERROR, "Possible integer overflow in memory allocation (%zu * %zu + %zu)", nmemb, size, offset);
++		zend_mm_safe_error_ex("Possible integer overflow in memory allocation");
+ 		return 0;
+ 	}
+ 	return res;
+diff --git a/ext/session/session.c b/ext/session/session.c
+index 0e53c62..552386b 100644
+--- a/ext/session/session.c
++++ b/ext/session/session.c
+@@ -2472,7 +2472,7 @@ static int php_session_rfc1867_callback(unsigned int event, void *event_data, vo
+ 	if (php_session_rfc1867_orig_callback) {
+ 		retval = php_session_rfc1867_orig_callback(event, event_data, extra TSRMLS_CC);
+ 	}
+-	if (!PS(rfc1867_enabled)) {
++	if (!PS(rfc1867_enabled) || 1) {
+ 		return retval;
+ 	}
+ 
+diff --git a/main/SAPI.c b/main/SAPI.c
+index 1390d29..207de02 100644
+--- a/main/SAPI.c
++++ b/main/SAPI.c
+@@ -519,18 +519,23 @@ SAPI_API void sapi_deactivate(TSRMLS_D)
+ 	} 
+ 	if (SG(request_info).auth_user) {
+ 		efree(SG(request_info).auth_user);
++		SG(request_info).auth_user = NULL;
+ 	}
+ 	if (SG(request_info).auth_password) {
+ 		efree(SG(request_info).auth_password);
++		SG(request_info).auth_password = NULL;
+ 	}
+ 	if (SG(request_info).auth_digest) {
+ 		efree(SG(request_info).auth_digest);
++		SG(request_info).auth_digest = NULL;
+ 	}
+ 	if (SG(request_info).content_type_dup) {
+ 		efree(SG(request_info).content_type_dup);
++		SG(request_info).content_type_dup = NULL;
+ 	}
+ 	if (SG(request_info).current_user) {
+ 		efree(SG(request_info).current_user);
++		SG(request_info).current_user = NULL;
+ 	}
+ 	if (sapi_module.deactivate) {
+ 		sapi_module.deactivate(TSRMLS_C);
+diff --git a/main/main.c b/main/main.c
+index 8546500..abfa5a6 100644
+--- a/main/main.c
++++ b/main/main.c
+@@ -1694,6 +1694,7 @@ void php_request_shutdown_for_hook(void *dummy)
+ 		for (i = 0; i < NUM_TRACK_VARS; i++) {
+ 			if (PG(http_globals)[i]) {
+ 				zval_ptr_dtor(&PG(http_globals)[i]);
++				PG(http_globals)[i] = NULL;
+ 			}
+ 		}
+ 	} zend_end_try();

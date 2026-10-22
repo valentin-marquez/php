@@ -17,8 +17,8 @@ aplicados pero no cubiertos por el test automático.
 | 7.1.33  | PHP7  | php-7.1.33.patch | OK | PATCHED | esencial; uncond resets tras EG(active)=0 |
 | 7.0.33  | PHP7  | php-7.0.33.patch | OK | PATCHED | esencial; objects_store free de 1 arg |
 | 5.6.40  | PHP5  | php-5.6.40.patch | OK | PATCHED | re-derivación esencial |
-| 5.5.38  | PHP5  | pendiente | - | - | re-derivación |
-| 5.4.45  | PHP5  | pendiente | - | - | re-derivación |
+| 5.5.38  | PHP5  | php-5.5.38.patch | OK | PATCHED | re-derivación esencial (anclas idénticas a 5.6) |
+| 5.4.45  | PHP5  | php-5.4.45.patch | OK | PATCHED | re-derivación esencial (anclas idénticas a 5.6) |
 
 Imágenes docker: 7.x -> debian:bookworm, 5.x -> debian:jessie (archive.debian.org).
 
