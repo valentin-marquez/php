@@ -91,34 +91,69 @@ fix. No demuestra el UAF ni que el OOM caiga dentro del codigo de
 `upload_progress` (cae en el crecimiento del hash de `$_POST`, con la sesion ya
 enganchada). Corrido en 7.4.33, 7.2.34 y 5.6.40, un representante de cada linaje.
 
-## Instalacion en Ubuntu
+## Instalacion
 
-Los parches son source-only. Se aplican sobre el tarball oficial de php.net de
-la version exacta y se recompila. Ejemplo para 7.2.34:
+Importante: estos son parches de codigo fuente. No parchean un binario en
+caliente. Para proteger una maquina hay que recompilar PHP con el parche
+aplicado y reemplazar el binario o SAPI que corre. El proceso: tarball oficial
+de php.net de la version exacta, `patch -p1`, `./configure` con tus flags,
+`make`, `make install`.
+
+### Opcion A: probar o reproducir (con Docker, sin ensuciar la maquina)
+
+Compila un PHP parcheado aislado y corre el test de regresion. Util para
+verificar que el parche cierra el fallo antes de tocar produccion.
 
 ```sh
+git clone https://github.com/valentin-marquez/php
+cd php
+./build/build.sh 5.4.45 debian:jessie patches/php-5.4.45.patch
+./poc/regression.sh build/out/php-5.4.45-patched   # imprime PATCHED
+```
+
+### Opcion B: parchear una maquina real (ejemplo PHP 5.4)
+
+En la maquina que corre PHP 5.4:
+
+```sh
+# 1. version exacta y flags del build actual (copialos para el paso 4)
+php -v
+php -i | grep 'Configure Command'
+
+# 2. dependencias de compilacion (ajusta segun tus extensiones)
 sudo apt-get update
 sudo apt-get install -y build-essential autoconf bison re2c pkg-config \
   libxml2-dev libsqlite3-dev curl
 
-curl -fsSLO https://www.php.net/distributions/php-7.2.34.tar.gz
-tar xzf php-7.2.34.tar.gz
-cd php-7.2.34
-patch -p1 --fuzz=3 < /ruta/al/repo/patches/php-7.2.34.patch
+# 3. tarball oficial de ESA version + parche, y aplicar
+curl -fsSLO https://www.php.net/distributions/php-5.4.45.tar.gz
+tar xzf php-5.4.45.tar.gz && cd php-5.4.45
+curl -fsSLO https://raw.githubusercontent.com/valentin-marquez/php/main/patches/php-5.4.45.patch
+patch -p1 --fuzz=3 < php-5.4.45.patch
 
-./configure --prefix=/opt/php-7.2.34-patched   # + tus flags de produccion
+# 4. configurar con LOS MISMOS flags del paso 1 (pega el Configure Command sin
+#    las comillas que imprime phpinfo), compilar e instalar
+./configure <tus-flags-de-produccion>
 make -j"$(nproc)"
 sudo make install
+
+# 5. reiniciar el SAPI y verificar
+sudo systemctl restart php5.4-fpm   # o apache2, segun tu setup
+php -v
 ```
 
 Notas:
 
-- Usa el mismo `./configure` que tu build de produccion (SAPI fpm o apache,
-  extensiones). El `--disable-all` del harness de este repo es solo para test.
-- Los parches propios 7.0 a 7.3 tocan `Zend/zend_vm_def.h` sin incluir el
-  `Zend/zend_vm_execute.h` regenerado. Si el build falla por eso, regeneralo
-  con el PHP recien compilado y recompila:
-  `(cd Zend && ../sapi/cli/php zend_vm_gen.php) && make -j"$(nproc)"`.
+- El `./configure` debe coincidir con tu build de produccion (SAPI fpm o
+  apache, extensiones). El `--disable-all` del harness de este repo es solo
+  para test, no sirve para produccion.
+- PHP 5.4 es de 2012. Compilarlo en un Ubuntu moderno suele fallar por
+  toolchain y OpenSSL; lo natural es compilarlo en la propia maquina de epoca,
+  o en la imagen `debian:jessie` que usa `build/build.sh`.
+- Para 7.x el proceso es identico cambiando version e imagen (`debian:bookworm`).
+  Los parches propios 7.0 a 7.3 tocan `Zend/zend_vm_def.h` sin el
+  `Zend/zend_vm_execute.h` regenerado: si el build falla por eso, regeneralo y
+  recompila con `(cd Zend && ../sapi/cli/php zend_vm_gen.php) && make -j"$(nproc)"`.
   Los parches oficiales (7.4, 8.0, 8.1) ya traen el header regenerado.
 - Para 8.2 o superior no uses estos parches: actualiza al release oficial.
 
