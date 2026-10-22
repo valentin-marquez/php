@@ -1,8 +1,9 @@
 # php — backport CVE-2026-109618 / CVE-2026-109619
 
 Backport del fix oficial de las dos RCE no autenticadas de PHP (CVSS 9.2,
-release del 2026-10-21) hacia versiones EOL, hasta PHP 5.4.0 (donde nace el
-código vulnerable).
+release del 2026-10-21) hacia versiones EOL: desde 8.1 hasta PHP 5.4.0 (donde
+nace el código vulnerable). De 8.2 en adelante hay release oficial corregido
+(8.2.35 / 8.3.36 / 8.4.27 / 8.5.12): ahí se actualiza, no se backportea.
 
 ## Las vulnerabilidades
 
@@ -25,8 +26,9 @@ Funciones tocadas (según writeups): `rfc1867_post_handler`,
 
 ## Oficial (base ya desplegada)
 
-Fijado: 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35. Backports mínimos oficiales para
-7.4, 8.0, 8.1. Nuestro trabajo empieza DEBAJO de 7.4.
+Fijado en release: 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35. Parches oficiales
+*source-only* (ramas EOL, sin binario) para 7.4, 8.0 y 8.1, que incluimos
+verbatim. Debajo de 7.4 es todo backport propio.
 
 ## Estructura
 
@@ -38,13 +40,13 @@ Fijado: 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35. Backports mínimos oficiales para
 
 ## Estado: COMPLETO
 
-Escalera de backport verificada 7.4.33 -> 5.4.45. Cada binario parcheado pasa
+Escalera de backport verificada 8.1.33 -> 5.4.45. Cada binario parcheado pasa
 el test de regresión (`poc/regression.sh`): el baseline es VULNERABLE y el
 parcheado PATCHED.
 
 | Versión | Base | Verificación |
 |---------|------|--------------|
-| 7.4.33 | parche oficial PHP-7.4 (`712e60f9ed`, verbatim) | PATCHED |
+| 8.1.33 / 8.0.30 / 7.4.33 | parche oficial EOL (verbatim) | PATCHED |
 | 7.3.33 / 7.2.34 / 7.1.33 / 7.0.33 | port completo | PATCHED |
 | 5.6.40 / 5.5.38 / 5.4.45 | re-derivación esencial (motor PHP5) | PATCHED |
 
@@ -63,8 +65,9 @@ Detalle de alcance y adaptaciones por versión en `notes/backports.md`.
 Compilar un PHP parcheado (CLI mínimo, en docker con toolchain de época):
 
 ```
-./build/build.sh 7.2.34 debian:bookworm patches/php-7.2.34.patch   # familia 7.x
-./build/build.sh 5.6.40 debian:jessie   patches/php-5.6.40.patch   # familia 5.x
+./build/build.sh 8.1.33 debian:bookworm patches/official-PHP-8.1.patch  # 8.0/8.1/7.4 oficial
+./build/build.sh 7.2.34 debian:bookworm patches/php-7.2.34.patch        # familia 7.x
+./build/build.sh 5.6.40 debian:jessie   patches/php-5.6.40.patch        # familia 5.x
 ```
 
 Verificar un binario:

@@ -12,7 +12,9 @@ fiel del upstream, aplicados y compilados pero no cubiertos por el test automát
 
 | Versión | Motor | Parche | Build | REG | Notas de adaptación |
 |---------|-------|--------|-------|-----|---------------------|
-| 7.4.33  | PHP7  | oficial (verbatim) | OK | PATCHED | aplica tal cual; `|| true` (7.4 define `true`) |
+| 8.1.33  | PHP8  | oficial EOL (verbatim, `1d7dec1`) | OK | PATCHED | rama `PHP-8.1-CVE-2026-109618-109619` |
+| 8.0.30  | PHP8  | oficial EOL (verbatim, `82f8f31b`) | OK | PATCHED | rama `PHP-8.0-CVE-2026-109618-109619` |
+| 7.4.33  | PHP7  | oficial EOL (verbatim, `712e60f9`) | OK | PATCHED | aplica tal cual; `|| true` (7.4 define `true`) |
 | 7.3.33  | PHP7  | php-7.3.33.patch | OK | PATCHED | completo; +ZSTR_MAX_LEN/OVERHEAD; singleton vía HT_HASH_RESET |
 | 7.2.34  | PHP7  | php-7.2.34.patch | OK | PATCHED | completo (paridad con PR comunitario 7.1) |
 | 7.1.33  | PHP7  | php-7.1.33.patch | OK | PATCHED | completo; calca el PR comunitario #24500 (ieth0) |
@@ -21,7 +23,18 @@ fiel del upstream, aplicados y compilados pero no cubiertos por el test automát
 | 5.5.38  | PHP5  | php-5.5.38.patch | OK | PATCHED | re-derivación esencial (anclas idénticas a 5.6) |
 | 5.4.45  | PHP5  | php-5.4.45.patch | OK | PATCHED | re-derivación esencial (anclas idénticas a 5.6) |
 
-Imágenes docker: 7.x -> debian:bookworm, 5.x -> debian:jessie (archive.debian.org).
+Imágenes docker: 7.x/8.x -> debian:bookworm, 5.x -> debian:jessie (archive.debian.org).
+
+## Cobertura: desde 5.4 hasta 8.1
+
+Backport necesario (ramas EOL sin release corregido): 5.4, 5.5, 5.6, 7.0, 7.1,
+7.2, 7.3, 7.4, 8.0, 8.1 — todas en la tabla, verificadas. PHP 6 nunca existió.
+Para 7.4/8.0/8.1 hay parche oficial *source-only* (ramas `PHP-<x>-CVE-2026-109618-109619`),
+guardado verbatim en `patches/official-PHP-<x>.patch`.
+
+De **8.2 en adelante NO se backportea**: hay release oficial corregido —8.2.35,
+8.3.36, 8.4.27, 8.5.12—, la acción es actualizar a esa versión. Se conserva
+`patches/official-PHP-8.2.35.patch` como referencia del fix en rama activa.
 
 ## Validación: parche comunitario + agente Fable
 
