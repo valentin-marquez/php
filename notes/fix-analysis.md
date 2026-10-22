@@ -15,28 +15,28 @@ siguiente request en el mismo worker.
 
 ## Hunks esenciales para cerrar las CVE
 
-1. **`zend_mm_safe_error_ex` (NUEVO, Zend/zend_alloc.c + .h)** — núcleo.
+1. **`zend_mm_safe_error_ex` (NUEVO, Zend/zend_alloc.c + .h)**: núcleo.
    Reemplaza el `zend_error_noreturn`+bailout en las rutas de fallo de
    asignación por un fatal que imprime y hace `_exit(1)` directo. Sin longjmp,
    sin estado corrupto reutilizable. Además `zend_mm_panic` y
    `zend_out_of_memory` pasan de `exit(1)` a `_exit(1)` (no corre atexit sobre
    heap corrupto).
-2. **Zend/zend_hash.c** — las 3 ramas de overflow de enteros pasan a
+2. **Zend/zend_hash.c**: las 3 ramas de overflow de enteros pasan a
    `zend_mm_safe_error_ex`. Añade `zend_new_array_singleton()` (array con
    nTableSize=1, asignación mínima).
-3. **main/rfc1867.c** — ini `max_multipart_body_parts` (default -1 →
+3. **main/rfc1867.c**: ini `max_multipart_body_parts` (default -1 →
    `max_input_vars + max_file_uploads`), corta el POST al excederlo; solo
    guarda headers Content-Disposition/Content-Type y descarta duplicados;
    fixes `int`→`size_t`. Acota el disparador OOM.
-4. **ext/session/session.c** — `if (!PS(rfc1867_enabled) || true)` neutraliza
+4. **ext/session/session.c**: `if (!PS(rfc1867_enabled) || true)` neutraliza
    el cuerpo de `php_session_rfc1867_callback` (mata la vía upload_progress).
-5. **main/main.c** — en `php_request_shutdown`: `ZVAL_UNDEF(&PG(http_globals)[i])`
+5. **main/main.c**: en `php_request_shutdown`: `ZVAL_UNDEF(&PG(http_globals)[i])`
    y `PG(modules_activated)=0`. El siguiente request no reusa punteros stale.
-6. **main/SAPI.c** — NULL tras `efree` de auth_user/password/digest/
+6. **main/SAPI.c**: NULL tras `efree` de auth_user/password/digest/
    content_type_dup/current_user.
-7. **Zend/zend_execute_API.c** — `shutdown_executor` resetea error/exception
+7. **Zend/zend_execute_API.c**: `shutdown_executor` resetea error/exception
    handlers y objects_store aun si el bailout ocurrió antes de init_executor.
-8. **main/php_variables.c** — `array_init_singleton` para los arrays GPC
+8. **main/php_variables.c**: `array_init_singleton` para los arrays GPC
    (minimiza footprint en la ventana pre-activación).
 
 ## Secundario (hardening profundo, evaluar por versión)

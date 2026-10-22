@@ -6,7 +6,7 @@ de la VM, y verificación con `poc/regression.sh`.
 
 Leyenda verificación: REG = test de regresión (mecanismo zend_mm_safe_error_ex,
 cubre la vía de corrupción por bailout). El build usa `--enable-session` (ver
-`build/build.sh`), así que `ext/session/session.c` —el vector parcheado— sí se
+`build/build.sh`), así que `ext/session/session.c` (el vector parcheado) sí se
 compila; el resto de hunks (resets de main.c/SAPI.c/zend_execute_API.c) son port
 fiel del upstream, aplicados y compilados pero no cubiertos por el test automático.
 
@@ -28,16 +28,16 @@ Imágenes docker: 7.x/8.x -> debian:bookworm, 5.x -> debian:jessie (archive.debi
 ## Cobertura: desde 5.4 hasta 8.1
 
 Backport necesario (ramas EOL sin release corregido): 5.4, 5.5, 5.6, 7.0, 7.1,
-7.2, 7.3, 7.4, 8.0, 8.1 — todas en la tabla, verificadas. PHP 6 nunca existió.
+7.2, 7.3, 7.4, 8.0, 8.1: todas en la tabla, verificadas. PHP 6 nunca existió.
 Para 7.4/8.0/8.1 hay parche oficial *source-only* (ramas `PHP-<x>-CVE-2026-109618-109619`),
 guardado verbatim en `patches/official-PHP-<x>.patch`.
 
-De **8.2 en adelante NO se backportea**: hay release oficial corregido —8.2.35,
-8.3.36, 8.4.27, 8.5.12—, la acción es actualizar a esa versión. Sus commits de
+De **8.2 en adelante NO se backportea**: hay release oficial corregido (8.2.35,
+8.3.36, 8.4.27, 8.5.12), la accion es actualizar a esa versión. Sus commits de
 release se archivan verbatim en `patches/official-PHP-{8.2.35,8.3.36,8.4.27,8.5.12}.patch`
 solo como referencia (no se compilan). Son el fix **completo** de rama activa
 (mecanismo UnwindExit + resets amplios + suite de tests), ~300+ archivos y ~20k
-líneas cada uno — distinto de la "mitigación mínima" EOL de 7.4/8.0/8.1 (~20 archivos).
+líneas cada uno. Distinto de la "mitigación mínima" EOL de 7.4/8.0/8.1 (~20 archivos).
 
 Commits de referencia: 8.2.35 `01a40e89`, 8.3.36 `3c832b52`, 8.4.27 `506e87fa`,
 8.5.12 `31c0ea7d` (todos en php/php-src).
@@ -52,25 +52,25 @@ difieren en dos adaptaciones deliberadas por estructura de rama:
 - `session.c`: upstream 7.4 usa `|| true`; el PR 7.1 usa `|| 1` porque las ramas
   pre-7.4 no definen `true`.
 - `shutdown_executor`: upstream 7.4 inserta los resets tras el bloque gc; en la
-  estructura de 7.0–7.3 eso no mapea, y el PR 7.1 los reubica al final, antes de
+  estructura de 7.0-7.3 eso no mapea, y el PR 7.1 los reubica al final, antes de
   `EG(active) = 0;`, incondicionalmente.
 
 Un agente Fable auditó el 7.1 contra el PR y destapó tres defectos en los backports
-7.0–7.3 (no en 7.4/8.0, que son verbatim upstream), ya corregidos:
-- **B1 — compilación.** Los 7.x usaban `|| true` heredado de 7.4; en 7.0–7.3 `true`
+7.0-7.3 (no en 7.4/8.0, que son verbatim upstream), ya corregidos:
+- **B1, compilacion.** Los 7.x usaban `|| true` heredado de 7.4; en 7.0-7.3 `true`
   no existe -> error al compilar `ext/session`. No se detectaba porque el build
   antiguo usaba `--disable-all` (session apagado). Fix: `|| 1` + harness con
   `--enable-session` para que no vuelva a esconderse.
-- **A1 — `shutdown_executor` mal ubicado.** El bloque de resets caía dentro del
+- **A1, `shutdown_executor` mal ubicado.** El bloque de resets caía dentro del
   `#if ZEND_DEBUG` (7.1, se compilaba fuera en release), antes del free del object
   store (7.0, early-return + leak), o dentro de `if (full_tables_cleanup)` (7.2/7.3,
   no corría en el shutdown normal). Fix: bloque completo reubicado al final, antes
   de `EG(active) = 0;`, como el PR comunitario. No reabría el CVE (el `_exit(1)`
   primario ya mata el worker en vez de reusar estado stale) pero era un defecto real.
-- **A2 — guarda `zend_mm_alloc_huge` ausente** en 7.0/7.1 (sí estaba en 7.2/7.3).
+- **A2, guarda `zend_mm_alloc_huge` ausente** en 7.0/7.1 (sí estaba en 7.2/7.3).
   Fix: añadida la guarda `new_size < size` del upstream.
 
-## Conjunto completo (7.0–7.4)
+## Conjunto completo (7.0-7.4)
 
 Todas las ramas 7.x llevan ahora el port completo del parche oficial:
 - `zend_mm_safe_error_ex` (varargs + vsnprintf + filename/lineno + `_exit(1)`) y
