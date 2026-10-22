@@ -35,3 +35,39 @@ Fijado: 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35. Backports mínimos oficiales para
 - `poc/`     — test de regresión del UAF (debe fallar sin parche, pasar con)
 - `notes/`   — mapeo de hunks, errores de compilación y cómo se mitigaron
 - `.upstream/` — clon de php-src (no se commitea), fuente de los parches
+
+## Estado: COMPLETO
+
+Escalera de backport verificada 7.4.33 -> 5.4.45. Cada binario parcheado pasa
+el test de regresión (`poc/regression.sh`): el baseline es VULNERABLE y el
+parcheado PATCHED.
+
+| Versión | Base | Verificación |
+|---------|------|--------------|
+| 7.4.33 | parche oficial PHP-7.4 (`712e60f9ed`) | PATCHED |
+| 7.3.33 | port completo | PATCHED |
+| 7.2.34 / 7.1.33 / 7.0.33 | conjunto esencial | PATCHED |
+| 5.6.40 / 5.5.38 / 5.4.45 | re-derivación esencial (motor PHP5) | PATCHED |
+
+Parches en `patches/php-<ver>.patch`. Tags `backport-<ver>` por versión.
+Detalle de alcance y adaptaciones por versión en `notes/backports.md`.
+
+## Uso
+
+Compilar un PHP parcheado (CLI mínimo, en docker con toolchain de época):
+
+```
+./build/build.sh 7.2.34 debian:bookworm patches/php-7.2.34.patch   # familia 7.x
+./build/build.sh 5.6.40 debian:jessie   patches/php-5.6.40.patch   # familia 5.x
+```
+
+Verificar un binario:
+
+```
+./poc/regression.sh build/out/php-7.2.34-patched
+```
+
+Para un deploy real hay que recompilar con el mismo `./configure` que la build
+en producción (SAPI fpm/apache, extensiones), no el `--disable-all` del harness.
+Los parches aplican igual: `patch -p1 --fuzz=3 < patches/php-<ver>.patch` sobre
+el tarball oficial de esa versión.
