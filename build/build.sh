@@ -8,6 +8,7 @@ docker info >/dev/null 2>&1 || { echo "ERROR: docker daemon no corre. Levantalo 
 VER="${1:?version, ej 7.4.33}"; IMG="${2:?imagen, ej debian:bookworm}"; PATCH="${3:-}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/build/out"; mkdir -p "$OUT"
+PATCH="${PATCH:+$(cd "$(dirname "$PATCH")" && pwd)/$(basename "$PATCH")}"
 TAG="php-$VER"; [ -n "$PATCH" ] && TAG="$TAG-patched"
 rm -f "$OUT/$TAG"
 URL="https://www.php.net/distributions/php-$VER.tar.gz"
