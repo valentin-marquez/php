@@ -26,9 +26,10 @@ Funciones tocadas (según writeups): `rfc1867_post_handler`,
 
 ## Oficial (base ya desplegada)
 
-Fijado en release: 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35. Parches oficiales
-*source-only* (ramas EOL, sin binario) para 7.4, 8.0 y 8.1, que incluimos
-verbatim. Debajo de 7.4 es todo backport propio.
+Fijado en release: 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35 (sus commits de release se
+archivan verbatim en `patches/official-PHP-8.{2,3,4,5}.*.patch`, solo referencia,
+no se compilan). Parches oficiales *source-only* (ramas EOL, sin binario) para
+7.4, 8.0 y 8.1, también verbatim. Debajo de 7.4 es todo backport propio.
 
 ## Estructura
 

@@ -33,8 +33,14 @@ Para 7.4/8.0/8.1 hay parche oficial *source-only* (ramas `PHP-<x>-CVE-2026-10961
 guardado verbatim en `patches/official-PHP-<x>.patch`.
 
 De **8.2 en adelante NO se backportea**: hay release oficial corregido —8.2.35,
-8.3.36, 8.4.27, 8.5.12—, la acción es actualizar a esa versión. Se conserva
-`patches/official-PHP-8.2.35.patch` como referencia del fix en rama activa.
+8.3.36, 8.4.27, 8.5.12—, la acción es actualizar a esa versión. Sus commits de
+release se archivan verbatim en `patches/official-PHP-{8.2.35,8.3.36,8.4.27,8.5.12}.patch`
+solo como referencia (no se compilan). Son el fix **completo** de rama activa
+(mecanismo UnwindExit + resets amplios + suite de tests), ~300+ archivos y ~20k
+líneas cada uno — distinto de la "mitigación mínima" EOL de 7.4/8.0/8.1 (~20 archivos).
+
+Commits de referencia: 8.2.35 `01a40e89`, 8.3.36 `3c832b52`, 8.4.27 `506e87fa`,
+8.5.12 `31c0ea7d` (todos en php/php-src).
 
 ## Validación: parche comunitario + agente Fable
 
