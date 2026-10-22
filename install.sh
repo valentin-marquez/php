@@ -169,15 +169,17 @@ if [ "$DO_INSTALL" = 1 ]; then
   say "  sudo systemctl restart php-fpm      # o php${XY}-fpm, o apache2, segun tu setup"
   say "y confirma con: $PHP -v"
 else
-  # Build-only exitoso: conservamos el arbol para que el usuario pueda
-  # inspeccionar e instalar. Quitamos el trap de borrado.
+  # Build-only exitoso: conservamos el arbol para inspeccionar. Quitamos el
+  # trap de borrado.
   trap - EXIT INT TERM
   say ""
-  say "BUILD LISTO (no se instalo nada)."
-  say "Binario parcheado: $STAGE/bin/php"
-  say "Para instalarlo sobre tu PHP, re-ejecuta con --install, o a mano:"
-  say "  cd $WORK/php-$VER && sudo make install && sudo systemctl restart php-fpm"
+  say "BUILD LISTO (build de prueba en staging; no se instalo nada)."
+  say "Binario parcheado para inspeccionar: $STAGE/bin/php"
   say ""
-  say "Cuando termines, borra el arbol temporal:"
-  say "  rm -rf $WORK"
+  say "Este arbol esta configurado con un prefix de staging, asi que NO corras"
+  say "'make install' aqui: instalaria al staging, no a tu PHP. Para instalar de"
+  say "verdad, re-ejecuta con --install (reconfigura con los flags de produccion):"
+  say "  curl -fsSL $REPO/install.sh | sh -s -- --install"
+  say ""
+  say "Cuando termines, borra el arbol temporal:  rm -rf $WORK"
 fi
